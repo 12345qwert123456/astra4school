@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Получаем тип установки из аргумента командной строки
+INSTALL_MODE="${1:-student}"  # По умолчанию - student
+
 # Цвета для вывода
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -34,12 +37,21 @@ execute_step() {
     local command="$2"
     
     echo -ne "${YELLOW}[/]${NC} $step_name\033[K"
-    if eval "$command" > /dev/null 2>&1; then
+    
+    # Выполняем команду и сохраняем вывод
+    local error_output
+    error_output=$(eval "$command" 2>&1)
+    local exit_code=$?
+    
+    if [ $exit_code -eq 0 ]; then
         echo -e "\r${GREEN}[+]${NC} $step_name - ${GREEN}УСПЕШНО${NC}\033[K"
         add_success "$step_name"
     else
         echo -e "\r${RED}[-]${NC} $step_name - ${RED}ОШИБКА${NC}\033[K"
-        add_error "$step_name" "Команда завершилась с ошибкой: $command"
+        # Сохраняем последние 3 строки ошибки для краткости
+        local error_summary
+        error_summary=$(echo "$error_output" | tail -n 3 | sed 's/^/  /')
+        add_error "$step_name" "Код ошибки: $exit_code\n$error_summary"
     fi
 }
 
@@ -52,7 +64,13 @@ install_package() {
     local dependencies="$5"  # необязательный параметр
     
     echo -ne "${YELLOW}[/]${NC} Загрузка $package_description\033[K"
-    if wget -q --show-progress "$package_url"; then
+    
+    # Сохраняем вывод wget для диагностики
+    local wget_output
+    wget_output=$(wget -q --show-progress "$package_url" 2>&1)
+    local wget_exit=$?
+    
+    if [ $wget_exit -eq 0 ]; then
         echo -e "\r${GREEN}[+]${NC} Загрузка $package_description - ${GREEN}УСПЕШНО${NC}\033[K"
         add_success "$package_name - загружен"
         
@@ -65,7 +83,11 @@ install_package() {
         execute_step "Установка $package_name" "dpkg --install $package_file"
     else
         echo -e "\r${RED}[-]${NC} Загрузка $package_description - ${RED}ОШИБКА${NC}\033[K"
-        add_error "$package_name" "Не удалось загрузить файл $package_file"
+        local error_msg="Не удалось загрузить файл $package_file с $package_url\nКод ошибки: $wget_exit"
+        if [ -n "$wget_output" ]; then
+            error_msg="$error_msg\n$(echo "$wget_output" | tail -n 2 | sed 's/^/  /')"
+        fi
+        add_error "$package_name" "$error_msg"
         
         if [ -n "$dependencies" ]; then
             add_skipped "Зависимости для $package_name - не установлены из-за ошибки загрузки"
@@ -77,6 +99,14 @@ install_package() {
 echo "======================================="
 echo "   УСТАНОВКА ПРОГРАММНОГО ОБЕСПЕЧЕНИЯ"
 echo "======================================="
+echo ""
+
+# Вывод информации о типе установки
+if [ "$INSTALL_MODE" = "teacher" ]; then
+    echo -e "${YELLOW}📚 Режим установки: ПК учителя${NC}"
+else
+    echo -e "${YELLOW}👨‍🎓 Режим установки: ПК ученика${NC}"
+fi
 echo ""
 
 # Проверка прав администратора
@@ -170,6 +200,20 @@ install_package "VSCode" "VSCode (универсальный редактор к
 # Установка Кумир
 install_package "Кумир" "Кумир (учебная среда программирования)" "https://easyastra.ru/store/kumir2.deb" "kumir2.deb" "libqt5script5"
 
+# Установка ЕСПД Прокси
+install_package "ЕСПД Прокси" "ЕСПД Прокси (прокси-сервер)" "https://easyastra.ru/utils/espd-proxy.deb" "espd-proxy.deb"
+
+# Установка Яндекс Браузер
+install_package "Яндекс Браузер" "Яндекс Браузер (веб-браузер)" "https://easyastra.ru/store/yandex.deb" "yandex.deb" "binutils jq squashfs-tools"
+
+# Установка VLC
+install_package "VLC" "VLC (медиаплеер)" "https://easyastra.ru/store/vlc.deb" "vlc.deb"
+
+# Установка Assistant (только для ПК учителя)
+if [ "$INSTALL_MODE" = "teacher" ]; then
+    install_package "Assistant" "Assistant (помощник учителя)" "https://easyastra.ru/store/assistant.deb" "assistant.deb"
+fi
+
 # Копирование файлов рабочего стола для пользователя student
 echo -ne "${YELLOW}[/]${NC} Создание ярлыков рабочего стола для пользователя student\033[K"
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
@@ -213,7 +257,7 @@ if [ ${#FAILED_COMPONENTS[@]} -gt 0 ]; then
     echo "Компоненты с ошибками:"
     for i in "${!FAILED_COMPONENTS[@]}"; do
         echo "❌ ${FAILED_COMPONENTS[$i]}"
-        echo "   Причина: ${ERROR_MESSAGES[$i]}"
+        echo -e "   Причина: ${ERROR_MESSAGES[$i]}"
         echo ""
     done
     
