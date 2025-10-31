@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=PascalABC.NET
+Name[ru]=PascalABC.NET
+Type=Application
+Exec=/bin/bash /usr/bin/PascalABCNET %U
+Icon=/usr/share/pixmaps/pascalABC_logo.png
+Terminal=false
+StartupNotify=true
+MimeType=text/x-pascal
+Categories=Development
+X-Fly-OriginFile=/usr/share/applications/pascalABC.desktop

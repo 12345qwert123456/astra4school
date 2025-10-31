@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Kumir Classic
+Name[ru]=Кумир Классик
+Type=Application
+Exec=/usr/bin/kumir2-classic %U
+Icon=/usr/share/pixmaps/kumir2-classic.png
+Terminal=false
+StartupNotify=true
+Categories=Education
+X-Fly-OriginFile=/usr/share/applications/kumir2-classic.desktop

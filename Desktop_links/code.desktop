@@ -1,0 +1,21 @@
+[Desktop Entry]
+Name=Visual Studio Code
+GenericName=Text Editor
+Type=Application
+Comment=Code Editing. Redefined.
+Exec=/usr/share/code/code --unity-launch %F
+Actions=new-empty-window;
+Icon=vscode
+StartupNotify=false
+StartupWMClass=Code
+MimeType=text/plain;inode/directory;application/x-code-workspace
+Categories=Development;IDE;TextEditor;Utility
+Keywords=vscode
+X-Fly-OriginFile=/usr/share/applications/code.desktop
+
+
+[Desktop Action new-empty-window]
+Name=New Empty Window
+Name[ru]=Новое пустое окно
+Icon=vscode
+Exec=/usr/share/code/code --new-window %F

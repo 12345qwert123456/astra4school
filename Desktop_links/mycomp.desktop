@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Link
+Name=My Computer
+Name[ru]=Мой компьютер
+URL=fly-fm:Computer
+Icon=computer
+OnlyShowIn=FLY;
+X-FLY-IconContext=Devices
+
