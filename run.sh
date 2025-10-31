@@ -148,9 +148,9 @@ fi
 # Клонирование репозитория
 if git clone --depth 1 "$GIT_REPO_URL" "$TEMP_DIR" 2>&1 | grep -v "Cloning into"; then
     echo -e "${GREEN}✅ Репозиторий успешно клонирован${NC}"
-    
-    # Копируем .env в временную директорию
-    cp "$SCRIPT_DIR/.env" "$TEMP_DIR/.env"
+
+    # Перемещаем .env в временную директорию
+    mv "$SCRIPT_DIR/.env" "$TEMP_DIR/.env"
     
     # Переходим во временную директорию
     cd "$TEMP_DIR" || exit 1

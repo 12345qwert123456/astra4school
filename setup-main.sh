@@ -63,15 +63,11 @@ install_package() {
     local package_file="$4"
     local dependencies="$5"  # необязательный параметр
     
-    echo -ne "${YELLOW}[/]${NC} Загрузка $package_description\033[K"
+    echo -e "${YELLOW}[↓]${NC} Загрузка $package_description..."
     
-    # Сохраняем вывод wget для диагностики
-    local wget_output
-    wget_output=$(wget -q --show-progress "$package_url" 2>&1)
-    local wget_exit=$?
-    
-    if [ $wget_exit -eq 0 ]; then
-        echo -e "\r${GREEN}[+]${NC} Загрузка $package_description - ${GREEN}УСПЕШНО${NC}\033[K"
+    # Показываем прогресс wget в реальном времени
+    if wget --show-progress "$package_url" 2>&1; then
+        echo -e "${GREEN}[+]${NC} Загрузка $package_description - ${GREEN}УСПЕШНО${NC}"
         add_success "$package_name - загружен"
         
         # Установка зависимостей если указаны
@@ -82,11 +78,9 @@ install_package() {
         # Установка пакета
         execute_step "Установка $package_name" "dpkg --install $package_file"
     else
-        echo -e "\r${RED}[-]${NC} Загрузка $package_description - ${RED}ОШИБКА${NC}\033[K"
+        local wget_exit=$?
+        echo -e "${RED}[-]${NC} Загрузка $package_description - ${RED}ОШИБКА${NC}"
         local error_msg="Не удалось загрузить файл $package_file с $package_url\nКод ошибки: $wget_exit"
-        if [ -n "$wget_output" ]; then
-            error_msg="$error_msg\n$(echo "$wget_output" | tail -n 2 | sed 's/^/  /')"
-        fi
         add_error "$package_name" "$error_msg"
         
         if [ -n "$dependencies" ]; then

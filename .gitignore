@@ -13,3 +13,6 @@
 *.rar
 *.7z
 *.tar.gz
+
+# SSH Ключи
+SSH_keys/*
