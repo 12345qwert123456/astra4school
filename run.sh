@@ -31,6 +31,24 @@ echo ""
 # Определяем директорию где находится скрипт
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Установка dos2unix если не установлен (для преобразования окончаний строк)
+if ! command -v dos2unix &> /dev/null; then
+    echo -e "${YELLOW}📦 Установка dos2unix...${NC}"
+    apt update > /dev/null 2>&1
+    apt install dos2unix -y > /dev/null 2>&1
+fi
+
+# Проверка и преобразование .env из Windows в Unix формат (CRLF -> LF)
+if [ -f "$SCRIPT_DIR/.env" ]; then
+    # Проверяем наличие dos2unix
+    if command -v dos2unix &> /dev/null; then
+        dos2unix "$SCRIPT_DIR/.env" 2>/dev/null
+    else
+        # Используем sed для удаления \r
+        sed -i 's/\r$//' "$SCRIPT_DIR/.env" 2>/dev/null
+    fi
+fi
+
 # Загрузка конфигурации
 if [ -f "$SCRIPT_DIR/.env" ]; then
     source "$SCRIPT_DIR/.env"
