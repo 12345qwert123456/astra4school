@@ -55,6 +55,38 @@ execute_step() {
     fi
 }
 
+# Функция для создания пользователя
+create_user() {
+    local username="$1"
+    local password_hash="$2"
+    local groups="$3"  # необязательный параметр
+    
+    echo -ne "${YELLOW}[/]${NC} Создание пользователя $username\033[K"
+    
+    if id "$username" &>/dev/null; then
+        echo -e "\r${YELLOW}[!]${NC} Создание пользователя $username - ${YELLOW}УЖЕ СУЩЕСТВУЕТ${NC}\033[K"
+        add_success "Пользователь $username - уже существует"
+    else
+        local useradd_cmd="useradd -m $username"
+        
+        # Добавляем группы если указаны
+        if [ -n "$groups" ]; then
+            useradd_cmd="$useradd_cmd -G $groups"
+        fi
+        
+        # Добавляем пароль
+        useradd_cmd="$useradd_cmd -p '$password_hash'"
+        
+        if eval "$useradd_cmd" > /dev/null 2>&1; then
+            echo -e "\r${GREEN}[+]${NC} Создание пользователя $username - ${GREEN}УСПЕШНО${NC}\033[K"
+            add_success "Создание пользователя $username"
+        else
+            echo -e "\r${RED}[-]${NC} Создание пользователя $username - ${RED}ОШИБКА${NC}\033[K"
+            add_error "Создание пользователя $username" "Не удалось создать пользователя"
+        fi
+    fi
+}
+
 # Функция для загрузки и установки .deb пакета
 install_package() {
     local package_name="$1"
@@ -65,8 +97,8 @@ install_package() {
     
     echo -e "${YELLOW}[↓]${NC} Загрузка $package_description..."
     
-    # Показываем прогресс wget в реальном времени
-    if wget --show-progress "$package_url" 2>&1; then
+    # Показываем только прогресс бар wget
+    if wget -q --show-progress -O "$package_file" "$package_url" 2>&1; then
         echo -e "${GREEN}[+]${NC} Загрузка $package_description - ${GREEN}УСПЕШНО${NC}"
         add_success "$package_name - загружен"
         
@@ -170,8 +202,8 @@ execute_step "Исправление зависимостей" "apt --fix-broken
 execute_step "Установка необходимых пакетов" "apt install -y dnsutils git net-tools"
 
 # Создание пользователей
-execute_step "Создание пользователя student" "useradd -m student -G floppy -p ''"
-execute_step "Создание пользователя teacher" "useradd -m teacher -p '$TEACHER_PASSWORD_HASH' -G sudo"
+create_user "student" "" "floppy"
+create_user "teacher" "$TEACHER_PASSWORD_HASH" "sudo"
 
 # Настройка SSH-сервера
 execute_step "Настройка SSH-сервера (доступ только для sysadm)" "echo 'AllowUsers sysadm' >> /etc/ssh/sshd_config && systemctl restart sshd"
