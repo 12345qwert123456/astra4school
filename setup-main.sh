@@ -203,7 +203,7 @@ execute_step "Установка необходимых пакетов" "apt ins
 
 # Создание пользователей
 create_user "student" "" "floppy"
-create_user "teacher" "$TEACHER_PASSWORD_HASH" "sudo"
+create_user "teacher" "$TEACHER_PASSWORD_HASH" "sudo,floppy"
 
 # Настройка SSH-сервера
 execute_step "Настройка SSH-сервера (доступ только для sysadm)" "echo 'AllowUsers sysadm' >> /etc/ssh/sshd_config && systemctl restart sshd"
@@ -213,6 +213,7 @@ install_package "Pascal" "Pascal (язык программирования)" "h
 
 # Обновление Python
 execute_step "Установка Python (язык программирования)" "apt install python3 python3-pip -y"
+execute_step "Установка IDLE3 (IDE для Python)" "apt install idle3 -y"
 
 # Установка Thonny
 install_package "Thonny" "Thonny (редактор для Python)" "https://easyastra.ru/store/thonny.deb" "thonny.deb"
